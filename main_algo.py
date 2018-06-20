@@ -115,6 +115,13 @@ def createAllSegments(nodesPath):
         isFloorChange = False
 
         allSegments.append(segment)
+        """
+        if i == (len(intNodesPath)-1):
+            segment = Segment(node.getCoords(), node.getCoords(), i, False, False)
+            allSegments.append(segment)
+        """
+    # segment = Segment(intNodesPath[-1].getCoords(), intNodesPath[-1].getCoords(), i, False, False)
+    allSegments.append(Segment(intNodesPath[-1].getCoords(), intNodesPath[-1].getCoords(), i, False, False))
     return allSegments
 
 
@@ -138,15 +145,16 @@ def startupModeSelection(repeat=False):
     if userInput == "help":
         speakText = """
                     Would you like directions to a specific destination, to get
-                    to a popular location, to get to your saved locations, or
-                    to find the nearest restroom?
+                    to a popular location, to get to your saved locations,
+                    to find the nearest restroom or printer, or to find God?
                     """
         speakColumbus(speakText)
 
         userInput = recognizeSpeech("mode")
 
     if userInput in ["nearestRestroom", "popularDestinations",
-                         "savedDestinations"]:
+                     "savedDestinations", "nearestPrinter",
+                     "specificDestination", "findGod"]:
         return userInput
 
     else:

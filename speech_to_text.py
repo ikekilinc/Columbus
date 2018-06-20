@@ -35,7 +35,6 @@ def recognizeSpeech(formatFilter=None): # recognize speech using CMU Sphinx
             output = filter(output)
             output = modeFilter(output)
         elif formatFilter=="popularDest":
-            print("Got here!")
             output = filter(output)
             output = popularDestFilter(output)
         else:
@@ -107,7 +106,9 @@ def confirmFilter(text):
     return None
 
 def modeFilter(text):
-    restroom = set(["restroom", "bathroom", "pee", "men"])
+    restroom = set(["restroom", "bathroom", "pee", "mens", "ladies", "poo",
+                    "poop", "dump", "piss"])
+    printer = set(["print", "printer", "paper"])
     popular = set(["popular", "common", "famous"])
     saved = set(["saved", "save"])
     specificDest = set(["specific", "particular"])
@@ -115,6 +116,8 @@ def modeFilter(text):
     for word in text.split():
         if word in restroom:
             return "nearestRestroom"
+        elif word in printer:
+            return "nearestPrinter"
         elif word in popular:
             return "popularDestinations"
         elif word in saved:
@@ -124,8 +127,8 @@ def modeFilter(text):
     return None
 
 def popularDestFilter(text):
-    prima = set(["prima", "Prima"])
-    sorrells = set(["sorrells", "sorel's", "shirelles", "cirella's"])
+    prima = set(["prima", "Prima", "coffee", "tea"])
+    sorrells = set(["sorrells", "sorel's", "shirelles", "cirella's", "library"])
 
     for word in text.split():
         if word in prima:

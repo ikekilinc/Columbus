@@ -1,4 +1,5 @@
 # Columbus - A Smart Navigation System for the Visually-Impaired
+# ^^^^ Columbus - An A* Integrated Smart Navigation System
 
 # This is the main file that controls the functionalities of Columbus. This file
 # calls others in the main project folder to import and export data as needed to
@@ -11,6 +12,17 @@ from path_finder import *
 from main_algo import *
 from tkinter import *
 
+"""
+Voice Recordings To Create
+>> "What would you like to do? Say help for options."
+>> "Would you like directions to a specific destination, to get to a popular
+location, to get to your saved locations, to find the nearest restroom or
+printer, or to find God?"
+>> "Where would you like to go?"
+>> "Where are you now?"
+>> "You have arrived at your destination."
+
+"""
 
 #####################################################################
 #####################################################################
@@ -48,6 +60,7 @@ def init(data):
     data.topMargin = data.height/3.5
     data.buttons = initButtons(data)
     data.startClicks = 0
+    data.backgroundImage = PhotoImage(file="brownPaperBackground.gif")
     # data.backgroundImage = PhotoImage(file="backgroundImage.gif")
     # data.backgroundImageHalfSize = data.backgroundImage.subsample(2,2)
     # data.majorTitleFont = tkFont.Font(family="Helvetica", size=80, weight=bold)
@@ -56,6 +69,8 @@ def init(data):
     
     data.mapView = False
     data.startRoute = False
+    data.startLocation = None
+    data.destination = None
     data.nodesPath = None
     data.allSegments = None
     data.currSegmentNum = 0
@@ -65,7 +80,10 @@ def init(data):
     data.nodeCircleRadius = 6
     data.offsetX = 0
     data.offsetY = 0
-
+    data.mapOffsetX = data.offsetX
+    data.mapOffsetY = data.offsetY
+    data.atDestination = False
+    
 
 def initButtons(data):
     (w, h, m, tm) = (data.width, data.height, data.margin, data.topMargin)
@@ -77,10 +95,69 @@ def initButtons(data):
     buttonD = Button("nearestRestroom", [m-diff, tm*(3/2)+butH, m+butW+diff, tm*(3/2)+2*butH], "Nearest Restroom")
     buttonE = Button("nearestPrinter", [2*m+butW-diff, tm*(3/2)+butH, 2*m+2*butW+diff, tm*(3/2)+2*butH], "Nearest Printer")
     buttonF = Button("findGod", [3*m+2*butW-diff, tm*(3/2)+butH, 3*m+3*butW+diff, tm*(3/2)+2*butH], "Find God")
-    buttonG = Button("audioControl", [w/2-w/6-diff, h-tm/2, w/2+w/6+diff, h], "Enable Audio Control")
+    buttonG = Button("audioControl", [w/2-w/6-diff, h-tm/2-10, w/2+w/6+diff, h-10], "Enable Audio Control")
 
     buttons = [buttonA, buttonB, buttonC, buttonD, buttonE, buttonF, buttonG]
     return buttons
+
+
+def runStartupSequence(data):
+    data.modeSelection = False
+    data.mapView = True
+    data.startRoute = True
+    # print(data.mode)
+
+    if data.mode == "specificDestination":
+        data.destination = destinationInput()
+        # PLAY CONFIRMATION BEEP
+        # data.startLocation = startLocationInput()
+        data.startLocation = input()
+    elif data.mode == "nearestRestroom":
+        # data.startLocation = startLocationInput()
+        data.startLocation = input()
+        # PLAY CONFIRMATION BEEP
+        data.destination = None
+
+    elif data.mode == "nearestPrinter":
+        print("Got here!")
+        # data.startLocation = startLocationInput()
+        data.startLocation = input()
+        # PLAY CONFIRMATION BEEP
+        data.destination = None
+
+    elif data.mode == "popularDestinations":
+        # Columbus gives user choice options of popular destinations.
+        data.destination = popularLocationsInput()
+        # PLAY CONFIRMATION BEEP
+        # data.startLocation = startLocationInput()
+        data.startLocation = input()
+
+    elif data.mode == "savedDestinations":
+        # Columbus gives user choice of previously saved destinations.
+        data.destination = savedLocationsInput()
+        # PLAY CONFIRMATION BEEP
+        # data.startLocation = startLocationInput()
+        data.startLocation = input()
+
+    elif data.mode == "findGod":
+        pass
+
+    # data.startLocation = input()
+    # data.destination = input()
+    print("Got here too!")
+
+    data.nodesPath = pathFinder(data.startLocation, data.destination, data.mode)
+    data.allSegments = createAllSegments(data.nodesPath)
+
+    data.destination = str(data.nodesPath[-1])
+    print(data.nodesPath)
+    print(data.allSegments)
+    for segment in data.allSegments:
+        print(segment.getSegBounds())
+
+    startSegment = data.allSegments[0]
+    data.currFloor = startSegment.getSegFloor()
+
 
 def mousePressed(event, data):
     if data.startScreen:
@@ -93,66 +170,19 @@ def mousePressed(event, data):
         (x, y) = (event.x, event.y)
         for button in data.buttons:
             if button.pointInButton(x, y):
+                print(data.mode)
                 if button.purpose == "audioControl":
                     data.audioControl = not data.audioControl
                     data.mode = startupModeSelection()
                 else:
                     data.mode = button.getPurpose()
-                data.modeSelection = False
-                data.mapView = True
-                data.startRoute = True
-                print(data.mode)
-
-
-                if data.mode == "specificDestination":
-                    destination = destinationInput()
-                    # startLocation = startLocationInput()
-                    startLocation = input()
-                elif data.mode == "nearestRestroom":
-                    # startLocation = startLocationInput()
-                    startLocation = input()
-                    destination = None
-
-                elif data.mode == "nearestPrinter":
-                    # startLocation = startLocationInput()
-                    startLocation = input()
-                    destination = None
-
-                elif data.mode == "popularDestinations":
-                    # Columbus gives user choice options of popular destinations.
-                    destination = popularLocationsInput()
-                    # startLocation = startLocationInput()
-                    startLocation = input()
-
-                elif data.mode == "savedDestinations":
-                    # Columbus gives user choice of previously saved destinations.
-                    destination = savedLocationsInput()
-                    # startLocation = startLocationInput()
-                    startLocation = input()
-
-                elif data.mode == "findGod":
-                    pass
-
-                # startLocation = input()
-                # destination = input()
-
-                data.nodesPath = pathFinder(startLocation, destination, data.mode)
-                data.allSegments = createAllSegments(data.nodesPath)
-
-                print(data.nodesPath)
-                print(data.allSegments)
-                for segment in data.allSegments:
-                    print(segment.getSegBounds())
-
-                startSegment = data.allSegments[0]
-                data.currFloor = startSegment.getSegFloor()
-
-
+                # print(data.mode)
+                
+                runStartupSequence(data)
 
     elif data.mapView:
         pass
         # enable click and drag functionality
-
 
 def keyPressed(event, data):
     print(event.keysym)
@@ -163,46 +193,45 @@ def keyPressed(event, data):
             data.modeSelection = True
 
     elif data.modeSelection:
-        if (event.keysym != "BackSpace"):
+        if (event.keysym == "space"):
             data.audioControl = not data.audioControl
             data.mode = startupModeSelection()
-            data.modeSelection = False
-            data.mapView = True
-            data.startRoute = True
-            print(data.mode)
-        else:
+            
+            runStartupSequence(data)
+
+        elif (event.keysym == "BackSpace"):
             data.startScreen = True
             data.modeSelection = False
     
     elif data.mapView:
-        if (event.keysym == "space"):
-            data.currSegmentNum += 1
-            data.currFloor = data.allSegments[data.currSegmentNum].getSegFloor()
-            print(data.currSegmentNum)
-        elif (event.keysym == "BackSpace"):
-            if data.currSegmentNum == 0:
-                data.mapView = False
-                data.startRoute = False
-                data.modeSelection = True
-            else:
-                data.currSegmentNum -= 1
+        if data.atDestination == False:
+            if (event.keysym == "space"):
+                data.currSegmentNum += 1
                 data.currFloor = data.allSegments[data.currSegmentNum].getSegFloor()
+                (data.offsetX, data.offsetY) = (0, 0)
                 print(data.currSegmentNum)
-        
-        elif (event.keysym == "Left"):
-            data.offsetX += 40
-        elif (event.keysym == "Right"):
-            data.offsetX -= 40
-        elif (event.keysym == "Up"):
-            data.offsetY += 40
-        elif (event.keysym == "Down"):
-            data.offsetY -= 40
-        
-        # print("cx,cy: ", data.width/2, data.height)
-        # print("offx,offy: ", data.offsetX, data.offsetY)
-
-        # print("result:", (data.width/2 + data.offsetX), -1* (data.height/2 - data.offsetY))
-
+            elif (event.keysym == "BackSpace"):
+                if data.currSegmentNum == 0:
+                    data.mapView = False
+                    data.startRoute = False
+                    data.modeSelection = True
+                else:
+                    data.currSegmentNum -= 1
+                    data.currFloor = data.allSegments[data.currSegmentNum].getSegFloor()
+                    (data.offsetX, data.offsetY) = (0, 0)
+                    print(data.currSegmentNum)
+            elif (event.keysym == "Left"):
+                data.offsetX += 40
+            elif (event.keysym == "Right"):
+                data.offsetX -= 40
+            elif (event.keysym == "Up"):
+                data.offsetY += 40
+            elif (event.keysym == "Down"):
+                data.offsetY -= 40
+        """
+        else:
+            if (event.keysym == )
+        """
 
 def timerFired(data):
     """
@@ -222,12 +251,25 @@ def timerFired(data):
 
         # data.offsetX = 
     """
+    if data.mapView:
+        currSeg = data.allSegments[data.currSegmentNum]
+        cx = data.width/2
+        cy = data.height/2
+        segBounds = currSeg.getSegBounds()
+        (x0,y0,x1,y1) = (segBounds[0], segBounds[1],
+                         segBounds[2], segBounds[3])
+
+        data.mapOffsetX = data.offsetX - x0 + cx
+        data.mapOffsetY = data.offsetY - y0 + cy
+
+
+
 
 
 
 def redrawAll(canvas, data):
     if data.startScreen:
-        # canvas.create_image(data.width/2, data.height/2, image=data.backgroundImageHalfSize)
+        canvas.create_image(data.width/2, data.height/2, image=data.backgroundImage)
         canvas.create_text(data.width/2, 390, text="Columbus", anchor=S, font="Avenir 205 bold")
         canvas.create_text(data.width/2, 350, text="A Smart Navigation System for the Visually-Impaired",
                            anchor=N, font="Avenir 35 bold")
@@ -235,6 +277,7 @@ def redrawAll(canvas, data):
                            anchor=N, font="Avenir 20")
 
     elif data.modeSelection:
+        canvas.create_image(data.width/2, data.height/2, image=data.backgroundImage)
         canvas.create_text(data.width/2, 10, text="Columbus", anchor=N, font="Avenir 185 bold")
         for button in data.buttons:
             coords = button.getCoords()
@@ -262,8 +305,8 @@ def redrawAll(canvas, data):
         elif data.currFloor == 5:
             currFloorImage = data.WH5Image
 
-        canvas.create_image((data.offsetX),
-                            (data.offsetY),
+        canvas.create_image((data.mapOffsetX),
+                            (data.mapOffsetY),
                             image=currFloorImage, anchor=NW)
 
         for segment in data.allSegments:
@@ -274,8 +317,8 @@ def redrawAll(canvas, data):
             # print("segment.getIsFloorChange: ", segment.getIsFloorChange())
             if (segment.getSegFloor() == data.currFloor and (segment.getIsFloorChange()==False)):
                 segBounds = segment.getSegBounds()
-                (x0,y0,x1,y1) = (segBounds[0] + data.offsetX, segBounds[1] + data.offsetY,
-                                 segBounds[2] + data.offsetX, segBounds[3] + data.offsetY)
+                (x0,y0,x1,y1) = (segBounds[0] + data.mapOffsetX, segBounds[1] + data.mapOffsetY,
+                                 segBounds[2] + data.mapOffsetX, segBounds[3] + data.mapOffsetY)
                 # print(x0,y0,x1,y1)
                 canvas.create_line(x0,y0,x1,y1, fill="green", width=5)
                 # print(segBounds)
@@ -291,8 +334,23 @@ def redrawAll(canvas, data):
                     # end destination node symbol
                     r = data.nodeCircleRadius + 1.5
                     canvas.create_oval(x1-r, y1-r, x1+r, y1+r, fill="blue")
-                    
+        
+        start = data.startLocation
+        dest = data.destination
 
+        if dest == "5Prima":
+            dest = "Prima"
+        elif dest == "4Sorrells":
+            dest = "Sorrells"
+        elif "Print" in dest:
+            dest = "Printer"
+        elif data.mode == "findGod":
+            dest = "God"
+
+        canvas.create_rectangle(0,0,150,50, fill="gray")
+        canvas.create_text(75,25, text="Start: " + start, font="Avenir 20")
+        canvas.create_rectangle(800,0,1000,50, fill="gray")
+        canvas.create_text(900,25, text="Destination: " + dest, font="Avenir 20")
 
 
 #####################################################################
