@@ -90,7 +90,7 @@ def isNumber(string):
 def confirmFilter(text):
     affirm = set(["yep", "yeah", "correct", "confirm", "confirmed"])
     negate = set(["nope", "nah", "incorrect", "wrong"])
-    for word in text.split()
+    for word in text.split():
         if word in affirm:
             return "yes"
         elif word in negate:

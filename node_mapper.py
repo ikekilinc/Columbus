@@ -28,53 +28,55 @@ allNodes = make2dList(9, 1, [])
 
 class Node(object):
     # Node class to more easily create objects to represent each node
-    def __init__(self, x, y, floor):
+    def __init__(self, x, y, floor, name=None):
         self.coords = (x, y, floor)
+        self.name = name
     def getCoords(self):
         return self.coords
+    def getName(self):
+        return self.name
     def __eq__(self, other):
-        return (isinstance(other, Node) and self.nodeCode==other.nodeCode)
+        if isinstance(other, Node):
+            return self.name==other.name
+        elif isinstance(other, str):
+            return self.name==other
+        else:
+            return False
+
+        # return (isinstance(other, Node) and self.name==other.name)
     def __hash__(self):
-        return hash(self.nodeCode)
+        return hash(self.name)
+    def __repr__(self):
+        return str(self.name)
 
 
 class Room(Node):
     # Room class as subclass of Node to store information about rooms.
-    def __init__(self, x, y, floor, roomName, dirFromNode):
-        super().__init__(x, y, floor)
-        self.roomName = roomName
+    def __init__(self, x, y, floor, name, dirFromNode):
+        super().__init__(x, y, floor, name)
+        # self.roomName = roomName
         self.dirFromNode = dirFromNode
-    def __repr__(self):
-        return str(self.roomName)
-    def getRoomName(self):
-        return self.roomName
+    
     def getDirFromNode(self):
         return self.dirFromNode
 
 
 class Intersection(Node):
     # Intersection class as subclass of Node to store information about ints.
-    def __init__(self, x, y, floor, intName): # , dirConnections
-        super().__init__(x, y, floor)
-        self.intName = intName
+    def __init__(self, x, y, floor, name): # , dirConnections
+        super().__init__(x, y, floor, name)
+        # self.intName = intName
         # self.dirConnections = dirConnections
-    def __repr__(self):
-        return str(self.intName)
-    def getIntName(self):
-        return self.intName
     # def getDirConnections(self):
     #     return self.dirConnections
 
 
 class Elevator(Node):
     # Elevator class as subclass of Node to store information about elevators.
-    def __init__(self, x, y, floor, elevName):
+    def __init__(self, x, y, floor, name):
         super().__init__(x, y, floor)
-        self.elevName = elevName
-    def __repr__(self):
-        return str(self.elevName)
-    def getElevName(self):
-        return self.elevName
+        # self.elevName = elevName
+   
 
 
 #####################################################################
@@ -183,21 +185,86 @@ def mapAllNodes():
 # Connections
 
 def mapAllConnections():
-    WH1Conns = {"1001": []}
-    WH2Conns = {"2001": []}
-    WH3Conns = {"3001": []}
-    WH4Conns = {"4001": []}
-    WH5Conns = {"5001": []}
-    WH6Conns = {"6001": []}
-    WH7Conns = {"7001": []}
-    WH8Conns = {"8001": []}
-    WH9Conns = {"9001": []}
-    elevConns = {"E1": ["E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9"],
-                 "E2": []}
+    WH1Conns = {"1Elevator": ["2Elevator", "3Elevator", "4Elevator",
+                              "5Elevator", "6Elevator", "7Elevator",
+                              "8Elevator", "9Elevator", "1001", "1002"],
+                "1001": ["1Elevator", "1AInt"], "1002": ["1Elevator"],
+                "1AInt": ["1001", "1004"], "1004": ["1AInt", "1BInt"],
+                "1BInt": ["1004", "1011", "1CInt"], "1011": ["1BInt", "1013"],
+                "1013": ["1011", "1009"], "1009": ["1013", "1010"],
+                "1010": ["1009", "1006"], "1006": ["1010"],
+                "1CInt": ["1BInt", "1014", "1301"], "1014": ["1CInt"],
+                "1301": ["1CInt", "1302"], "1302": ["1301", "1303"],
+                "1303": ["1302", "1305"], "1305": ["1303", "1307"],
+                "1307": ["1305", "1309"], "1309": ["1307", "1312"],
+                "1312": ["1309", "1311"], "1311": ["1312", "1318"],
+                "1318": ["1311", "1313"], "1313": ["1318", "1320"],
+                "1320": ["1313", "1315"], "1315": ["1320", "1317"],
+                "1317": ["1315", "1319"], "1319": ["1317", "1322"],
+                "1322": ["1319", "1321"], "1321": ["1322", "1323"],
+                "1323": ["1321", "1324"], "1324": ["1323", "1326"],
+                "1326": ["1324", "1325"], "1325": ["1326", "1329"],
+                "1329": ["1325", "1331"], "1331": ["1329", "1333"],
+                "1333": ["1331", "1DInt"], "1DInt": ["1333", "1340"]
+               }
+    WH2Conns = {"2Elevator": ["1Elevator", "3Elevator", "4Elevator",
+                              "5Elevator", "6Elevator", "7Elevator",
+                              "8Elevator", "9Elevator", "5AInt"],
+                "5AInt": ["5Elevator", "5BInt", "5CInt"],
+                "5BInt": ["5AInt", "5DInt"],
+                "5DInt": ["5BInt", "5EInt"],
+                "5EInt": ["5DInt", "5FInt"],
+                "5CInt": ["5AInt", "5FInt", "5403"],
+                "5403": ["5CInt", "5409"],
+                "5409": ["5403", "5415"],
+                "5415": ["5409", "5421"],
+                "5421": ["5415", "5IInt"],
+                "5IInt": ["5421", "5HInt"],
+                "5HInt": ["5IInt", "5337", "5336"],
+                "5337": ["5HInt"],
+                "5336": ["5HInt", "5333"],
+                "5333": ["5336", "5328"],
+                "5328": ["5333", "5331"],
+                "5331": ["5328", "5325"],
+                "5325": ["5331", "5324"],
+                "5324": ["5325", "5321"],
+                "5321": ["5324", "5320"],
+                "5320": ["5321", "5319"],
+                "5319": ["5320", "5317"],
+                "5317": ["5319", "5316"],
+                "5316": ["5317", "5315"],
+                "5315": ["5316", "5313"],
+                "5313": ["5315", "5312"],
+                "5312": ["5313", "5311"],
+                "5311": ["5312", "5309"],
+                "5309": ["5311", "5310"],
+                "5310": ["5309", "5307"],
+                "5307": ["5310", "5304"],
+                "5304": ["5307", "5303"],
+                "5303": ["5304", "5302"],
+                "5302": ["5303", "5301"],
+                "5301": ["5302", "5GInt"],
+                "5GInt": ["5301", "5014", "5FInt"],
+                "5014": ["5GInt"]
+               }
+    WH3Conns = {"3Elevator": []
+               }
+    WH4Conns = {"4Elevator": []
+               }
+    WH5Conns = {"5Elevator": []
+               }
+    WH6Conns = {"6Elevator": []
+               }
+    WH7Conns = {"7Elevator": []
+               }
+    WH8Conns = {"8Elevator": []
+               }
+    WH9Conns = {"9Elevator": []
+               }
 
-    allConnections = {"WH1": WH1Conns, "WH2": WH2Conns, "WH3": WH3Conns,
-                      "WH4": WH4Conns, "WH5": WH5Conns, "WH6": WH6Conns,
-                      "WH7": WH7Conns, "WH8": WH8Conns, "WH9": WH9Conns}
+    allConnections = {**WH1Conns, **WH2Conns, **WH3Conns, **WH4Conns,
+                      **WH5Conns, **WH6Conns, **WH7Conns, **WH8Conns,
+                      **WH9Conns}
 
     return allConnections
 
