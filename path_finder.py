@@ -1,11 +1,10 @@
-# Pathfinder - A* Search Algorithm
+# Pathfinder - Breadth First Search
 
 # Utilizing dictionary plotting connections between different nodes, pathfinder
 # calculates the shortest path from one node (start) to another (destination).
 # Pathfinder utilizes the A* search algorithm to calculate this path and then
 # converts list of nodes to visit en route to destination to left/right/forward
-# directions for the product user. The heuristic used by the A* algorithm is the
-# direct distance from the current node being tested to the destination node.
+# directions for the product user.
 
 from node_mapper import *
 
@@ -22,13 +21,43 @@ def directDist(currNode, endNode):
         return ((currNode.getCoords()[0] - endNode.getCoords()[0])**2 + \
                 (currNode.getCoords()[1] - endNode.getCoords()[1])**2) ** 0.5
 
-def calcFCost(currNode, endNode):
-    # Total cost of getting from startNode to endNode via currNode. Calculated
-    # by finding direct distance cost from currNode to endNode via utilization
-    # of pythagorean theorem.
+def calcDCost(currNode, endNode):
     return directDist(currNode, endNode)
 
-def findLowestFCost(openNodes, endNode):
+"""
+def calcGCost(currNode, startNode, cameFrom):
+    # Function calculates (recursively) the distance from the current node to
+    # the origin via previously visited nodes.
+
+    if currNode not in cameFrom.keys():
+        return 0
+
+    # if cameFrom[None] == currNode:
+    #     return 0
+
+    # if currNode == cameFrom[None]:
+    #     return 0
+
+    # if currNode == startNode:
+    #     return 0
+
+    # if not isinstance(currNode, Node):
+    #     return 0
+
+    print("cameFrom: ", cameFrom)
+    print("currNode: ", currNode)
+    print("cameFrom[currNode]: ", cameFrom[currNode])
+    parentNode = cameFrom[currNode]
+    return calcDCost(currNode, parentNode) + calcGCost(parentNode, startNode, cameFrom)
+"""
+
+def calcFCost(currNode, endNode, cameFrom):
+    # Total cost of getting from startNode to endNode via currNode. Calculated
+    # by finding cost from currNode to startNode via nodes plus direct distance
+    # from currNode to endNode.
+    return calcDCost(currNode, endNode) # + calcGCost(currNode, startNode, cameFrom)
+
+def findLowestFCost(openNodes, endNode, cameFrom):
     # Finds the node among the currently open nodes that has the lowest F cost,
     # such that the F cost of a node is defined as cost of getting from the
     # origin to the destination via the selected node.
@@ -36,7 +65,7 @@ def findLowestFCost(openNodes, endNode):
     bestCost = 10**42
 
     for node in openNodes:
-        currFCost = calcFCost(node, endNode)
+        currFCost = calcFCost(node, endNode, cameFrom)
         if currFCost < bestCost:
             bestCost = currFCost
             bestNode = node
@@ -73,8 +102,10 @@ def navigateNodes(startStr, endStr): # start and end are the objects of start no
     print("endNode: ", endNode)
 
     while len(openNodes) != 0:
-        currNode = findLowestFCost(openNodes, endNode)
+        currNode = findLowestFCost(openNodes, endNode, cameFrom)
         print("    currNode: ", currNode)
+        # print("fCost: ", calcFCost(currNode, startNode, endNode, cameFrom))
+
 
         if currNode == None:
             return None # there is no possible path to endNode
@@ -83,18 +114,18 @@ def navigateNodes(startStr, endStr): # start and end are the objects of start no
         closedNodes.add(currNode)
 
         if currNode == endNode:
-            # print("cameFrom: ", cameFrom)
-            return reconstruct_path(currNode, startNode, cameFrom)
+            return reconstruct_path(cameFrom, currNode)
 
+# allConnsMap[currNode.getName()]
         for neighbor in getAllConnections(allNodesMap, allConnsMap, currNode):
-            # print("neighbor: ", neighbor)
-            # print("cameFrom: ", cameFrom)
+            print("neighbor: ", neighbor)
+            print("cameFrom: ", cameFrom)
             if neighbor in closedNodes:
                 continue # ignore already evaluated nodes
-            tempFScore = calcFCost(currNode, endNode)
+            tempFScore = calcFCost(currNode, endNode, cameFrom)
             if ((neighbor not in openNodes) or
-                (tempFScore < calcFCost(neighbor, endNode))):
-                # print("fCost: ", calcFCost(neighbor, endNode))
+                (tempFScore < calcFCost(neighbor, endNode, cameFrom))):
+                print("gCost: ", calcFCost(neighbor, endNode, cameFrom))
                 cameFrom[neighbor] = currNode
 
                 if neighbor not in openNodes:
@@ -115,20 +146,7 @@ def getAllConnections(allNodesMap, allConnsMap, currNode):
     return allNeighbors
 
 
-def reconstruct_path(currNode, startNode, cameFrom):
-    # Once the A* navigateNodes algorithm has found the most efficient path from
-    # the start node to the destination, this function recursively returns a 
-    # list of all nodes (room, intersection, etc.) visited in this calculated 
-    # path.
-    if currNode == startNode:
-        return [currNode]
-
-    parentNode = cameFrom[currNode]
-    return reconstruct_path(parentNode, startNode, cameFrom) + [currNode]
-
-
-"""
-def reconstruct_path_iterative(currNode, cameFrom): # Current is object, cameFrom is map
+def reconstruct_path(cameFrom, currNode): # Current is object, cameFrom is map
     fullPath = [currNode]
 
     while currNode not in cameFrom.keys():
@@ -140,30 +158,7 @@ def reconstruct_path_iterative(currNode, cameFrom): # Current is object, cameFro
 
     return fullPath
 
-def reconstruct_path_ADAPTED(currNode, startNode, cameFrom):
-    # Function calculates (recursively) the distance from the current node to
-    # the origin via previously visited nodes.
-
-    if currNode not in cameFrom.keys():
-        return 0
-
-    # if cameFrom[None] == currNode:
-    #     return 0
-
-    # if currNode == cameFrom[None]:
-    #     return 0
-
-    # if currNode == startNode:
-    #     return 0
-
-    # if not isinstance(currNode, Node):
-    #     return 0
-
-    parentNode = cameFrom[currNode]
-    return calcDCost(currNode, parentNode) + calcGCost(parentNode, startNode, cameFrom)
-"""
-
-
+# nodesPath = navigateNodes("1001", "1321")
 nodesPath = navigateNodes("1001", "1321")
 print(nodesPath)
 
