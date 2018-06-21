@@ -191,6 +191,7 @@ def findUserDirections(nodeList, startOrientation=None):
     if isinstance(nodeList[-2], Intersection):
         pass
 
+
 def nearestRestroom(startStr):
     allNodesMap = mapAllNodes()
     currFloor = "WH%s" % startStr[0]
@@ -207,6 +208,7 @@ def nearestRestroom(startStr):
             smallestDist = currDist
             bestDest = str(node)
     return bestDest
+
 
 def nearestPrinter(startStr):
     allNodesMap = mapAllNodes()

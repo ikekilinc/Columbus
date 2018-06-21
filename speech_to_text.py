@@ -12,15 +12,18 @@ import sys
 sys.path.append('/')
 import speech_recognition as sr
 import pyaudio
+from audio_engine import *
 
 def recognizeSpeech(formatFilter=None): # recognize speech using CMU Sphinx
-    print("formatFilter: ", formatFilter)
+    play("voiceCommands/listening.wav")
+    # print("formatFilter: ", formatFilter)
     r = sr.Recognizer() # obtain audio from the microphone
     with sr.Microphone() as source:
         print("Say something!")
         audio = r.listen(source)
     try:
         output = r.recognize_google(audio)
+        play("voiceCommands/listened.wav")
         output = output.lower()
         print(output)
         if formatFilter==None:
@@ -110,8 +113,9 @@ def modeFilter(text):
                     "poop", "dump", "piss"])
     printer = set(["print", "printer", "paper"])
     popular = set(["popular", "common", "famous"])
-    saved = set(["saved", "save"])
+    saved = set(["saved", "save", "favorite", "past"])
     specificDest = set(["specific", "particular"])
+    helpOptions = set(["help", "options", "assistance", "mode", "modes"])
 
     for word in text.split():
         if word in restroom:
@@ -124,10 +128,12 @@ def modeFilter(text):
             return "savedDestinations"
         elif word in specificDest:
             return "specificDestination"
+        elif word in helpOptions:
+            return "help"
     return None
 
 def popularDestFilter(text):
-    prima = set(["prima", "Prima", "coffee", "tea"])
+    prima = set(["prima", "Prima", "coffee", "tea", "rhema", "primo"])
     sorrells = set(["sorrells", "sorel's", "shirelles", "cirella's", "library"])
 
     for word in text.split():

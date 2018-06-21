@@ -115,12 +115,7 @@ def createAllSegments(nodesPath):
         isFloorChange = False
 
         allSegments.append(segment)
-        """
-        if i == (len(intNodesPath)-1):
-            segment = Segment(node.getCoords(), node.getCoords(), i, False, False)
-            allSegments.append(segment)
-        """
-    # segment = Segment(intNodesPath[-1].getCoords(), intNodesPath[-1].getCoords(), i, False, False)
+
     allSegments.append(Segment(intNodesPath[-1].getCoords(), intNodesPath[-1].getCoords(), i, False, False))
     return allSegments
 
@@ -134,21 +129,15 @@ def startupModeSelection(repeat=False):
     # restroom, directions to popular destinations, and directions to previously
     # saved destinations.
     if repeat == True:
-        speakText = "I am sorry. Could you say that again?"
-        speakColumbus(speakText)
+        play("voiceCommands/sorryPleaseRepeat.wav")
     else:
-        speakText = "What would you like to do? Say help for options."
-        speakColumbus(speakText)
+        play("voiceCommands/modeSelectionInputPrompt.wav")
 
     userInput = recognizeSpeech("mode")
 
+    print("userInput: ", userInput)
     if userInput == "help":
-        speakText = """
-                    Would you like directions to a specific destination, to get
-                    to a popular location, to get to your saved locations,
-                    to find the nearest restroom or printer, or to find God?
-                    """
-        speakColumbus(speakText)
+        play("voiceCommands/modeSelectionHelp.wav")
 
         userInput = recognizeSpeech("mode")
 
@@ -163,12 +152,10 @@ def startupModeSelection(repeat=False):
 
 def destinationInput(repeat=False):
     if repeat==True:
-        speakText = "I am sorry. Could you say that again?"
-        speakColumbus(speakText)
+        play("voiceCommands/sorryPleaseRepeat.wav")
     else:
         # Columbus asks where user would like to go.
-        speakText = "Where would you like to go?"
-        speakColumbus(speakText)
+        play("voiceCommands/destinationInputPrompt.wav")
 
     # User inputs destination
     destination = recognizeSpeech("location")
@@ -190,14 +177,13 @@ def destinationInput(repeat=False):
         return destinationInput()
     """
 
+
 def startLocationInput(repeat=False):
     if repeat==True:
-        speakText = "I am sorry. Could you say that again?"
-        speakColumbus(speakText)
+        play("voiceCommands/sorryPleaseRepeat.wav")
     else:
         # Columbus asks where user is now.
-        speakText = "Where are you now?"
-        speakColumbus(speakText)    
+        play("voiceCommands/startLocationInputPrompt.wav") 
 
     # User inputs start location.
     startLocation = recognizeSpeech("location")
@@ -219,23 +205,24 @@ def startLocationInput(repeat=False):
         return startLocationInput()
     """
 
+
 def popularLocationsInput(repeat=False):
     print("popLocsInput")
     if repeat==True:
-        speakText = "I am sorry. Could you say that again?"
-        speakColumbus(speakText)
+        play("voiceCommands/sorryPleaseRepeat.wav")
     else:
         # Columbus asks where user would like to go.
-        speechText = "Popular destinations include"
-        speakColumbus(speechText)
+        play("voiceCommands/destinationInputPromptWithHelp.wav")
 
-    popularDestinations = returnPopularDestinations()
+    userInput = recognizeSpeech("popularDest")
 
-    destination = recognizeSpeech("popularDest")
-    # print("destination", destination)
-    
-    if isLegalNode(destination):
-        return destination
+    if userInput == "help":
+        play("voiceCommands/modeSelectionHelp.wav")
+        userInput = recognizeSpeech("popularDest")
+
+    if userInput in ["5Prima", "4Sorrells"]:
+        return userInput
+
     else:
         return popularLocationsInput(True)
 
@@ -246,8 +233,8 @@ def savedLocationsInput():
     pass
 
 
-def speakColumbus(speechText):
-    print(speechText)
+# def speakColumbus(speechText):
+#     print(speechText)
 
 
 def isLegalNode(string):
@@ -258,12 +245,6 @@ def isLegalNode(string):
             if string == roomStr:
                 return True
     return False
-
-
-
-
-
-
 
 
 

@@ -40,7 +40,6 @@ class Room(Node):
     def getDirFromNode(self):
         return self.dirFromNode
 
-
 class Intersection(Node):
     # Intersection class as subclass of Node to store information about ints.
     def __init__(self, x, y, floor, name): # , dirConnections
@@ -48,7 +47,6 @@ class Intersection(Node):
         # self.dirConnections = dirConnections
     # def getDirConnections(self):
     #     return self.dirConnections
-
 
 class Elevator(Node):
     # Elevator class as subclass of Node to store information about elevators.
@@ -125,8 +123,9 @@ def mapAllNodes():
            "1340": Room(2015, 460, 1, "1340", "E") }
     WH2 = {"2Elevator": Elevator(0,0, 2, "2Elevator") }
     WH3 = {"3Elevator": Elevator(0,0, 3, "3Elevator") }
-    WH4 = {"4Elevator": Elevator(0,0, 4, "4Elevator")}
-           # "4Sorrells": Other(___, ___, 4, "4Sorrells") }
+    WH4 = {"4Elevator": Elevator(1280, 425, 4, "4Elevator"),
+           "4AInt": Intersection(1280, 455, 4, "4AInt"),
+           "4Sorrells": Room(1362, 455, 4, "4Sorrells", "E") }
     WH5 = {"5Elevator": Elevator(1085, 630, 5, "5Elevator"),
            "5AInt": Intersection(1085, 675, 5, "5AInt"),
            "5BInt": Intersection(977, 675, 5, "5BInt"),
@@ -219,11 +218,15 @@ def mapAllConnections():
                }
     WH2Conns = {"2Elevator": ["1Elevator", "3Elevator", "4Elevator",
                               "5Elevator", "6Elevator", "7Elevator",
-                              "8Elevator", "9Elevator"], #include other connects
+                              "8Elevator", "9Elevator"] #include other connects
                }
     WH3Conns = {"3Elevator": []
                }
-    WH4Conns = {"4Elevator": []
+    WH4Conns = {"4Elevator": ["1Elevator", "2Elevator", "3Elevator",
+                              "5Elevator", "6Elevator", "7Elevator",
+                              "8Elevator", "9Elevator", "4AInt"],
+                "4AInt": ["4Elevator", "4Sorrells"],
+                "4Sorrells": ["4AInt"]
                }
     WH5Conns = {"5Elevator": ["1Elevator", "3Elevator", "4Elevator",
                               "5Elevator", "6Elevator", "7Elevator",
@@ -294,6 +297,5 @@ def mapAllConnections():
 def returnPopularDestinations():
     popularDestinations = ["5Prima", "Sorrells"]
     return set(popularDestinations)
-
 
 
