@@ -1,10 +1,12 @@
-# Columbus - A Smart Navigation System for the Visually-Impaired
-# ^^^^ Columbus - An A* Integrated Smart Navigation System
+# Columbus - An A* Integrated Smart Navigation System
+# Ike Kilinc
 
-# This is the main file that controls the functionalities of Columbus. This file
-# calls others in the main project folder to import and export data as needed to
+# This is the main file that controls all features of Columbus. This file calls
+# others in the main project folder to import and export data as needed to
 # operate Columbus and create a cogent user-experience. This file will call
-# Columbus' speech engine, node mapper, path finder, and image number reader.
+# Columbus' main algorithm, node mapper, path finder, speech to text converter,
+# and audio engine, integrating these different aspects into a tkinter-powered
+# visual interface and speech recognition powered audio interface.
 
 from speech_to_text import *
 from node_mapper import *
@@ -47,7 +49,7 @@ def init(data):
     data.startClicks = 0
     data.allNodesMap = mapAllNodes()
 
-    data.backgroundImage = PhotoImage(file="brownPaperBackground.gif")
+    data.backgroundImage = PhotoImage(file="design/brownPaperBackground.gif")
     data.modeSelection = False
     data.audioControl = False
     data.mode = None
@@ -57,7 +59,6 @@ def init(data):
     data.savedLocationButtons = initSavedLocsButtons(data)
     data.selectPopLocsScreen = False
     data.selectSavedLocsScreen = False
-    # data.prevModesList = []
     
     data.mapView = False
     data.startRoute = False
@@ -66,10 +67,15 @@ def init(data):
     data.nodesPath = None
     data.allSegments = None
 
+    data.directionFacing = "N"
+    data.kozFace = PhotoImage(file="design/koz.gif")
     data.currSegmentNum = 0
+    data.userIsMoving = False
     data.currFloor = 0
-    data.WH1Image = PhotoImage(file="WH_F1.gif")#.subsample(2,2)
-    data.WH5Image = PhotoImage(file="WH_F5.gif")
+
+    data.WH1Image = PhotoImage(file="design/weanFloorPlans/WH_F1.gif")
+    data.WH4Image = PhotoImage(file="design/weanFloorPlans/WH_F4.gif")
+    data.WH5Image = PhotoImage(file="design/weanFloorPlans/WH_F5.gif")
     
     data.offsetX = 0
     data.offsetY = 0
@@ -79,6 +85,10 @@ def init(data):
 
     data.nodeCircleRadius = 6
 
+#####################################################################
+#####################################################################
+#####################################################################
+#####################################################################
 
 def initButtons(data):
     (w, h, m, tm) = (data.width, data.height, data.margin, data.topMargin)
@@ -111,7 +121,6 @@ def initPopLocsButtons(data):
 def initSavedLocs(data):
     savedLocations = []
     currContents = readFile("savedLocations.txt")
-    print("currContents: ", currContents)
     for location in currContents.splitlines():
         locationFloor = "WH%s" % location[0]
         locationNode = data.allNodesMap[locationFloor][location]
@@ -122,18 +131,12 @@ def initSavedLocs(data):
 def saveLocation(data, newLocation):
     finalStr = ""
     for location in data.savedLocations:
-        # print(location)
-        # if str(location) not in finalStr:
         finalStr = finalStr + str(location) + "\n"
 
-    print("finalStr1: ", finalStr)
     if str(newLocation) not in finalStr:
         finalStr = finalStr + newLocation
-        print("finalStr2: ", finalStr)
     else:
         finalStr = finalStr[:-1]
-        print("finalStr: ", finalStr)
-    print(finalStr)
     writeFile("savedLocations.txt", finalStr)
 
 
@@ -151,20 +154,14 @@ def initSavedLocsButtons(data):
         button = Button(str(location), [x0, y0, x1, y1], str(location))
         allButtons.append(button)
 
-    # buttonA = Button("5Prima", [m-diff, tm*(4/3), m+butW+diff, tm*(4/3)+butH], "Prima")
-    # buttonB = Button("4Sorrells", [2*m+butW-diff, tm*(4/3), 2*m+2*butW+diff, tm*(4/3)+butH], "Sorrells")
-    # buttonC = Button("savedDestinations", [3*m+2*butW-diff, tm*(4/3), 3*m+3*butW+diff, tm*(4/3)+butH], "Saved Destinations")
-    # buttonD = Button("nearestRestroom", [m-diff, tm*(3/2)+butH, m+butW+diff, tm*(3/2)+2*butH], "Nearest Restroom")
-    # buttonE = Button("nearestPrinter", [2*m+butW-diff, tm*(3/2)+butH, 2*m+2*butW+diff, tm*(3/2)+2*butH], "Nearest Printer")
-    # buttonF = Button("findGod", [3*m+2*butW-diff, tm*(3/2)+butH, 3*m+3*butW+diff, tm*(3/2)+2*butH], "Find God")
-    # buttonZ = Button("audioControl", [w/2-w/6-diff, h-tm/2-10, w/2+w/6+diff, h-10], "Enable Audio Control")
-
     buttonZ = Button("audioControl", [w/2-w/6-diff, h-tm/2-10, w/2+w/6+diff, h-10], "Enable Audio Control")
     allButtons.append(buttonZ)
 
     return allButtons
 
 
+#####################################################################
+#####################################################################
 
 def readFile(path): # From 15-112 "Strings" notes
     with open(path, "rt") as f:
@@ -174,20 +171,21 @@ def writeFile(path, contents): # From 15-112 "Strings" notes
     with open(path, "wt") as f:
         f.write(contents)
 
+#####################################################################
+#####################################################################
+
 def runStartupSequence(data):
     if data.mode == "specificDestination":
         data.destination = destinationInput()
-        # data.startLocation = startLocationInput()
-        data.startLocation = input()
+        data.startLocation = startLocationInput()
+        # data.startLocation = input()
     elif data.mode == "nearestRestroom":
-        # data.startLocation = startLocationInput()
-        data.startLocation = input()
-        # PLAY CONFIRMATION BEEP
+        data.startLocation = startLocationInput()
+        # data.startLocation = input()
         data.destination = None
     elif data.mode == "nearestPrinter":
-        # data.startLocation = startLocationInput()
-        data.startLocation = input()
-        # PLAY CONFIRMATION BEEP
+        data.startLocation = startLocationInput()
+        # data.startLocation = input()
         data.destination = None
     elif data.mode == "popularDestinations" and data.startLocation == None:
         # Columbus gives user choice of popular destinations.
@@ -197,32 +195,26 @@ def runStartupSequence(data):
         data.selectSavedLocsScreen = not data.selectSavedLocsScreen
     elif data.mode == "findGod":
         # Columbus finds God.
-        pass
-
-    # data.startLocation = input()
-    # data.destination = input()
-    # print("Got here too!")
-    # print("startLocation: ", data.startLocation)
+        data.startLocation = startLocationInput()
+        play("voiceCommands/findingGod.wav")
+        data.destination = "1323"
 
     if data.startLocation != None:
-        # print("Got to map maker area")
         data.modeSelection = False
         data.mapView = True
         data.startRoute = True
-        # print(data.mode)
 
         data.nodesPath = pathFinder(data.startLocation, data.destination, data.mode)
         data.allSegments = createAllSegments(data.nodesPath)
 
         data.destination = str(data.nodesPath[-1])
-        print(data.nodesPath)
-        print(data.allSegments)
-        for segment in data.allSegments:
-            print(segment.getSegBounds())
 
         startSegment = data.allSegments[0]
         data.currFloor = startSegment.getSegFloor()
+        data.directionFacing = data.nodesPath[0].getDirFromNode()
 
+#####################################################################
+#####################################################################
 
 def mousePressed(event, data):
     if data.startScreen:
@@ -237,12 +229,12 @@ def mousePressed(event, data):
             if button.pointInButton(x, y):
                 if button.purpose == "audioControl":
                     data.destination = popularLocationsInput(data)
-                    # play("voiceCommands/confirmationBeep.wav")
                     data.startLocation = startLocationInput()
                 else:
                     data.destination = button.getPurpose()
-                    data.startLocation = input()
-                # print(data.startLocation, data.destination)
+                    data.startLocation = startLocationInput()
+                    # print("Input start location:")
+                    # data.startLocation = input()
                 data.selectPopLocsScreen = False
                 runStartupSequence(data)
 
@@ -250,15 +242,14 @@ def mousePressed(event, data):
         (x, y) = (event.x, event.y)
         for button in data.savedLocationButtons:
             if button.pointInButton(x, y):
-                print("buttonPurpose: ", button.purpose)
                 if button.purpose == "audioControl":
                     data.destination = savedLocationsInput(data)
-                    # play("voiceCommands/confirmationBeep.wav")
                     data.startLocation = startLocationInput()
                 else:
                     data.destination = button.getPurpose()
-                    print("Input start location:")
-                    data.startLocation = input()
+                    data.startLocation = startLocationInput()
+                    # print("Input start location:")
+                    # data.startLocation = input()
                 data.selectSavedLocsScreen = False
                 runStartupSequence(data)
 
@@ -267,15 +258,11 @@ def mousePressed(event, data):
         (x, y) = (event.x, event.y)
         for button in data.modeButtons:
             if button.pointInButton(x, y):
-                # print(data.mode)
-                if button.purpose == "savedDestinations":
-                    print(data.savedLocations)
                 if button.purpose == "audioControl":
                     data.audioControl = not data.audioControl
                     data.mode = startupModeSelection()
                 else:
                     data.mode = button.getPurpose()
-                # print(data.mode)
                 data.selectSavedLocsScreen = False
                 runStartupSequence(data)
 
@@ -283,18 +270,18 @@ def mousePressed(event, data):
         pass
         # enable click and drag functionality
 
+#####################################################################
+#####################################################################
+
 def keyPressed(event, data):
     if data.startScreen:
-        print(event.keysym)
         data.startClicks += 1
         if data.startClicks > 1:
             data.startScreen = False
             data.modeSelection = True
 
-
     elif data.selectPopLocsScreen:
         if (event.keysym == "space"):
-            # data.audioControl = not data.audioControl
             data.destination = popularLocationsInput(data)
             data.startLocation = startLocationInput()
             data.selectPopLocsScreen = False
@@ -308,7 +295,6 @@ def keyPressed(event, data):
 
     elif data.selectSavedLocsScreen:
         if (event.keysym == "space"):
-            # data.audioControl = not data.audioControl
             data.destination = savedLocationsInput(data)
             data.startLocation = startLocationInput()
 
@@ -320,9 +306,7 @@ def keyPressed(event, data):
 
     elif data.modeSelection:
         if (event.keysym == "space"):
-            # data.audioControl = not data.audioControl
             data.mode = startupModeSelection()
-            print(data.mode)
 
             runStartupSequence(data)
 
@@ -333,24 +317,11 @@ def keyPressed(event, data):
 
     elif data.mapView:
         if data.atDestination == True:
-            # play("voiceCommands/arrivedAtDestination.wav")
-            # play("voiceCommands/destinationSavePrompt.wav")
             if (event.keysym == "space"):
-                data.startScreen = True
-                data.mapView = False
-                data.startRoute = False
-                data.startLocation = None
-                data.destination = None
+                init(data)
             elif (event.keysym == "Return"):
-                print(data.destination)
                 saveLocation(data, data.destination)
-                data.startScreen = True
-                data.mapView = False
-                data.startRoute = False
-                data.startLocation = None
-                data.destination = None
-            data.savedLocations = initSavedLocs(data)
-            data.savedLocationButtons = initSavedLocsButtons(data)
+                init(data)
 
         if data.atDestination == False:
             # if data.currSegmentNum == 0:
@@ -360,23 +331,40 @@ def keyPressed(event, data):
                     data.currSegmentNum += 1
                     data.currFloor = data.allSegments[data.currSegmentNum].getSegFloor()
                     (data.offsetX, data.offsetY) = (0, 0)
-                    print(data.currSegmentNum)
+                    data.userIsMoving = True
                 else:
-                    # play("voiceCommands/arrivedAtDestination.wav")
-                    # play("voiceCommands/destinationSavePrompt.wav")
+                    play("voiceCommands/arrivedAtDestination.wav")
+                    play("voiceCommands/destinationSavePrompt.wav")
                     data.atDestination = True
+                
+                currSegment = data.allSegments[data.currSegmentNum]
+                if currSegment.getIsFloorChange() == True:
+                    data.directionFacing = "N"
+                elif data.currSegmentNum != len(data.allSegments) - 1:
+                    data.directionFacing = currSegment.getSegmentDirection()
+                else:
+                    currSegment = data.allSegments[data.currSegmentNum-1]
+                    data.directionFacing = currSegment.getSegmentDirection()
+
             elif (event.keysym == "BackSpace"):
                 if data.currSegmentNum == 0:
-                    data.mapView = False
-                    data.startRoute = False
+                    init(data)
                     data.modeSelection = True
-                    data.startLocation = None
-                    data.destination = None
+                    data.startScreen = False
                 else:
                     data.currSegmentNum -= 1
                     data.currFloor = data.allSegments[data.currSegmentNum].getSegFloor()
                     (data.offsetX, data.offsetY) = (0, 0)
-                    print(data.currSegmentNum)
+                
+                currSegment = data.allSegments[data.currSegmentNum]
+                if currSegment.isFloorChange() == True:
+                    data.directionFacing = "N"
+                elif data.currSegmentNum != len(data.allSegments) - 1:
+                    data.directionFacing = currSegment.getSegmentDirection()
+                else:
+                    currSegment = data.allSegments[data.currSegmentNum-1]
+                    data.directionFacing = currSegment.getSegmentDirection()
+
             elif (event.keysym == "Left"):
                 data.offsetX += 40
             elif (event.keysym == "Right"):
@@ -385,14 +373,10 @@ def keyPressed(event, data):
                 data.offsetY += 40
             elif (event.keysym == "Down"):
                 data.offsetY -= 40
-        
-            # if data.currSegmentNum == len(data.allSegments)-1:
-            #     data.atDestination = True
 
-        """
-        else:
-            if (event.keysym == )
-        """
+
+#####################################################################
+#####################################################################
 
 def timerFired(data):
     if data.mapView:
@@ -407,11 +391,16 @@ def timerFired(data):
         data.mapOffsetY = data.offsetY - y0 + cy
 
 
+#####################################################################
+#####################################################################
+
 def redrawAll(canvas, data):
     if data.startScreen:
         canvas.create_image(data.width/2, data.height/2, image=data.backgroundImage)
         canvas.create_text(data.width/2, 390, text="Columbus", anchor=S, font="Avenir 205 bold")
-        canvas.create_text(data.width/2, 350, text="A Smart Navigation System for the Visually-Impaired",
+        # canvas.create_text(data.width/2, 350, text="A Smart Navigation System for the Visually-Impaired",
+        #                    anchor=N, font="Avenir 35 bold")
+        canvas.create_text(data.width/2, 350, text="An A* Integrated Smart Navigation System",
                            anchor=N, font="Avenir 35 bold")
         canvas.create_text(data.width/2, 400, text="Click anywhere or press any button to continue",
                            anchor=N, font="Avenir 20")
@@ -423,9 +412,6 @@ def redrawAll(canvas, data):
             coords = button.getCoords()
             (x0, y0, x1, y1) = (coords[0], coords[1], coords[2], coords[3])
             (cx, cy) = ((x1+x0)/2, (y1+y0)/2)
-            # if (button.getPurpose() == "audioControl") and (data.audioControl):
-            #     buttonColor = "red"
-            # else:
             buttonColor = "black"
             canvas.create_rectangle(x0,y0,x1,y1, width=5, outline=buttonColor)
             canvas.create_text(cx, cy, text=button.getText(),
@@ -438,9 +424,6 @@ def redrawAll(canvas, data):
             coords = button.getCoords()
             (x0, y0, x1, y1) = (coords[0], coords[1], coords[2], coords[3])
             (cx, cy) = ((x1+x0)/2, (y1+y0)/2)
-            # if (button.getPurpose() == "audioControl") and (data.audioControl):
-            #     buttonColor = "red"
-            # else:
             buttonColor = "black"
             canvas.create_rectangle(x0,y0,x1,y1, width=5, outline=buttonColor)
             canvas.create_text(cx, cy, text=button.getText(),
@@ -453,22 +436,12 @@ def redrawAll(canvas, data):
             coords = button.getCoords()
             (x0, y0, x1, y1) = (coords[0], coords[1], coords[2], coords[3])
             (cx, cy) = ((x1+x0)/2, (y1+y0)/2)
-            # if (button.getPurpose() == "audioControl") and (data.audioControl):
-            #     buttonColor = "red"
-            # else:
             buttonColor = "black"
             canvas.create_rectangle(x0,y0,x1,y1, width=5, outline=buttonColor)
             canvas.create_text(cx, cy, text=button.getText(),
                                fill=buttonColor, font="Avenir 30")
 
     elif data.mapView:
-        # currSegment = data.allSegments[data.currSegmentNum]
-        # currSegmentFloor = currSegment.getSegFloor()
-        # currFloor = "WH_F%d" % currSegmentFloor
-        # currFloorImageName = currFloor + ".gif"
-        # currFloorImage = PhotoImage(file="backgroundImage.gif")
-        # print(data.currFloor)
-
         if data.currFloor == 1:
             currFloorImage = data.WH1Image
 
@@ -480,18 +453,11 @@ def redrawAll(canvas, data):
                             image=currFloorImage, anchor=NW)
 
         for segment in data.allSegments:
-            # print(segment.getSegFloor(), data.currFloor)
-            # print("isFloorChange: ", segment.getIsFloorChange())
-            # print("segFloor==currFloor: ", segment.getSegFloor() == data.currFloor)
-            # print("isFloorChange==False: ", segment.getIsFloorChange==False)
-            # print("segment.getIsFloorChange: ", segment.getIsFloorChange())
             if (segment.getSegFloor() == data.currFloor and (segment.getIsFloorChange()==False)):
                 segBounds = segment.getSegBounds()
                 (x0,y0,x1,y1) = (segBounds[0] + data.mapOffsetX, segBounds[1] + data.mapOffsetY,
                                  segBounds[2] + data.mapOffsetX, segBounds[3] + data.mapOffsetY)
-                # print(x0,y0,x1,y1)
                 canvas.create_line(x0,y0,x1,y1, fill="green", width=5)
-                # print(segBounds)
 
                 r = data.nodeCircleRadius
                 canvas.create_oval(x0-r, y0-r, x0+r, y0+r, fill="red")
@@ -517,12 +483,23 @@ def redrawAll(canvas, data):
         elif data.mode == "findGod":
             dest = "God"
 
+        if start == "5Prima":
+            start = "Prima"
+        elif start == "4Sorrells":
+            start = "Sorrells"
+        elif "Print" in start:
+            start = "Printer"
+
         canvas.create_rectangle(0,0,150,50, fill="gray")
         canvas.create_text(75,25, text="Start: " + start, font="Avenir 20")
         canvas.create_rectangle(800,0,1000,50, fill="gray")
         canvas.create_text(900,25, text="Destination: " + dest, font="Avenir 20")
 
+        canvas.create_image(data.width/2, data.height/2, image=data.kozFace)
 
+
+#####################################################################
+#####################################################################
 #####################################################################
 #####################################################################
 
@@ -553,7 +530,7 @@ def run(width=1000, height=600):
     data.width = width
     data.height = height
     data.timerDelay = 100 # milliseconds
-    # create the root and the canvas
+    # create the root, init, and the canvas
     root = Tk()
     init(data)
     root.title("Columbus")

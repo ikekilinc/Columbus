@@ -1,4 +1,5 @@
 # Wean Hall Node Mapper
+# Ike Kilinc
 
 # Node mapper uses OOP to represent each Room, Intersection, and Elevator in
 # Wean Hall as subclasses of the superclass "Node." Doing so enables us to
@@ -44,15 +45,11 @@ class Intersection(Node):
     # Intersection class as subclass of Node to store information about ints.
     def __init__(self, x, y, floor, name): # , dirConnections
         super().__init__(x, y, floor, name)
-        # self.dirConnections = dirConnections
-    # def getDirConnections(self):
-    #     return self.dirConnections
 
 class Elevator(Node):
     # Elevator class as subclass of Node to store information about elevators.
     def __init__(self, x, y, floor, name):
         super().__init__(x, y, floor, name)
-        # self.elevName = elevName
 
 class Restroom(Room):
     # Bathroom class as subclass of Room to store information about bathrooms.

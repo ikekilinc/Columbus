@@ -1,4 +1,5 @@
 # Speech to Text Conversion
+# Ike Kilinc
 
 # The Speech to Text converter enables the user to operate Columbus entirely
 # with voice commands. Doing so makes Columbus accessible to a wider user base,
@@ -24,7 +25,7 @@ def recognizeSpeech(formatFilter=None): # recognize speech using CMU Sphinx
     try:
         output = r.recognize_google(audio)
         play("voiceCommands/listened.wav")
-        output = output.lower()
+        # output = output.lower()
         print(output)
         if formatFilter==None:
             return output
@@ -45,6 +46,7 @@ def recognizeSpeech(formatFilter=None): # recognize speech using CMU Sphinx
             output = savedDestFilter(output)
         else:
             output = filter(output)
+        print(output)
         return output
     except sr.UnknownValueError:
         # print("I could not understand audio")
@@ -88,11 +90,17 @@ def correctCommands(text):
     return output
 
 def locationFilter(text):
-    output = ""
+    prima = set(["prima", "Prima", "coffee", "tea", "rhema", "primo", "dreamer"])
+    sorrells = set(["sorrells", "sorel's", "shirelles", "cirella's", "library"])
+
     for word in text.split():
-        if isNumber(word):
-            output += word
-    return output
+        if word in prima:
+            return "5Prima"
+        elif word in sorrells:
+            return "4Sorrells"
+        elif isNumber(word):
+            return word
+    return ""
 
 def isNumber(string):
     try:
@@ -113,7 +121,7 @@ def confirmFilter(text):
 
 def modeFilter(text):
     restroom = set(["restroom", "bathroom", "pee", "mens", "ladies", "poo",
-                    "poop", "dump", "piss"])
+                    "poop", "dump", "piss", "shit"])
     printer = set(["print", "printer", "paper"])
     popular = set(["popular", "common", "famous"])
     saved = set(["saved", "save", "favorite", "past"])

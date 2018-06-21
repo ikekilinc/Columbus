@@ -1,4 +1,5 @@
 # Pathfinder - A* Search Algorithm
+# Ike Kilinc
 
 # Utilizing dictionary plotting connections between different nodes, pathfinder
 # calculates the shortest path from one node (start) to another (destination).
@@ -36,7 +37,6 @@ def pathFinder(startStr, endStr, mode=None):
         return startSegment + endSegment
 
     else:
-        # do something maybe?
         pass
 
 #####################################################################
@@ -92,16 +92,11 @@ def navigateNodes(startStr, endStr): # start and end are the objects of start no
     allNodesMap = mapAllNodes() # dictionary mapping each node's name to its object
     allConnsMap = mapAllConnections() # dictionary mapping each node to its connected nodes
 
-    # allNodesSet = set(allNodesMap.values().values())
-
     startFloor = "WH%s" % startStr[0]
     startNode = allNodesMap[startFloor][startStr]
     
     endFloor = "WH%s" % endStr[0]
     endNode = allNodesMap[endFloor][endStr]
-
-    # if (startNode not in allNodesSet) or (endNode not in allNodesSet):
-    #     return None
 
     closedNodes = set()
     openNodes = set()
@@ -109,12 +104,8 @@ def navigateNodes(startStr, endStr): # start and end are the objects of start no
 
     cameFrom = dict()
 
-    print("startNode: ", startNode)
-    print("endNode: ", endNode)
-
     while len(openNodes) != 0:
         currNode = findLowestFCost(openNodes, endNode)
-        print("    currNode: ", currNode)
 
         if currNode == None:
             return None # there is no possible path to endNode
@@ -126,16 +117,6 @@ def navigateNodes(startStr, endStr): # start and end are the objects of start no
             # Reconstruct path taken to arrive at destination
             nodeList = reconstruct_path(currNode, startNode, cameFrom)
             return nodeList
-            """
-            # Convert path into directions that could be interpreted by users
-            directions = "FIND HUMAN INTERPRETABLE DIRECTIONS FROM NODE LIST"
-            # calculate pixel distance via nodes from start to destination
-            pixelDistance = calcBCost(len(nodeList)-1, nodeList)
-            # convert pixel distance to actual distance
-            distance = "FIND ACTUAL DISTANCE CONVERSIONS, CREATE LIST, CONVERT"
-            return [nodeList, distance]
-            # return [nodeList, pixelDistance]
-            """
 
         for neighbor in getAllConnections(allNodesMap, allConnsMap, currNode):
             if neighbor in closedNodes:
@@ -152,7 +133,6 @@ def navigateNodes(startStr, endStr): # start and end are the objects of start no
 #####################################################################
 
 def getAllConnections(allNodesMap, allConnsMap, currNode):
-    # think about how elevators affect this (specifically the floor line)
     allNeighbors = [ ]
 
     for neighborStr in allConnsMap[currNode.getName()]:
@@ -178,10 +158,6 @@ def reconstruct_path(currNode, startNode, cameFrom):
 def findUserDirections(nodeList, startOrientation=None):
     # Takes list of nodes to visit and returns list of left, right, straight
     # directions user must take at intersections to arrive at destination.
-
-    # DO THIS BY COMPARING X,Y COORDINATES OF NODES AND SEEING IF CHANGE
-    # IN X,Y COORDINATES IS +VE OR -VE AT START AND AT EACH INTERSECTION
-
     if startOrientation == None:
         startOrientation = nodeList[0].getDirFromNode()
 

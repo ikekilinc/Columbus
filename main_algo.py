@@ -1,26 +1,24 @@
 # Columbus - A Smart Navigation System for the Visually-Impaired
+# Ike Kilinc
 
-# This is the main file that controls the functionalities of Columbus. This file
-# calls others in the main project folder to import and export data as needed to
-# operate Columbus and create a cogent user-experience. This file will call
-# Columbus' speech engine, node mapper, path finder, and image number reader.
+# This file integrates Columbus' primary start location and destination input
+# features with its core pathfinding algorithm. This file also facilitates
+# Columbus' speech recognition and audio functionalities.
 
 from speech_to_text import *
 from node_mapper import *
 from path_finder import *
-# from main_interface import *
 
-# INTEGRATE A "REMEMBER DESTINATION" FUNCTIONALITY
+#####################################################################
+#####################################################################
 
 def run():
     # Columbus asks what the user would like to do (with help option). directions, popular dests, directions
     pathMode = startupModeSelection()
-    print(pathMode)
 
     if pathMode == "specificDestination":
         # User inputs destination.
         destination = destinationInput()
-        # Columbus asks where user is (TEMP).
         startLocation = startLocationInput()
 
     elif pathMode == "nearestRestroom":
@@ -39,27 +37,19 @@ def run():
         # Columbus gives user choice options of popular destinations.
         # Sets user input as the destination.
         destination = popularLocationsInput(data)
-        # Columbus asks where user is (TEMP).
         startLocation = startLocationInput()
 
     elif pathMode == "savedDestinations":
         # Columbus gives user choice of previously saved destinations and sets
         # user input as the destination.
         destination = savedLocationsInput(data)
-        # Columbus asks where user is (TEMP).
         startLocation = startLocationInput()
 
     elif pathMode == "findGod":
         pass
 
-    # startLocation = recognizeSpeech("location")
-    # destination = recognizeSpeech("location")
-
     # Columbus searches for and determines path to destination.
     nodesPath = pathFinder(startLocation, destination, pathMode)
-
-    # Columbus speaks path directions.
-    print(nodesPath)
 
 #####################################################################
 #####################################################################
@@ -71,6 +61,7 @@ class Segment(object):
         self.segNumber = segNumber
         self.isActive = isActive
         self.isFloorChange = isFloorChange
+        # self.direction = direction
     def __repr__(self):
         return str(self.segNumber)
     def __hash__(self):
@@ -89,6 +80,13 @@ class Segment(object):
         centerX = (self.segmentBounds[0] + self.segmentBounds[2])/2
         centerY = (self.segmentBounds[1] + self.segmentBounds[3])/2
         return (centerX, centerY)
+    def getSegmentDirection(self):
+        (x0,y0,x1,y1) = self.segmentBounds
+        if (x1-x0) > 0: return "E"
+        elif (x1-x0) < 0: return "W"
+        elif (y1-y0) > 0: return "S"
+        elif (y1-y0) < 0: return "N"
+        else: return None
 
 
 def createAllSegments(nodesPath):
@@ -105,13 +103,9 @@ def createAllSegments(nodesPath):
     for i in range(len(intNodesPath)-1):
         (node, nextNode) = (intNodesPath[i], intNodesPath[i+1])
         
-        # print(node, nextNode)
-        # print("node: ", isinstance(node, Elevator))
-        # print("nextNode: ", isinstance(nextNode, Elevator))
         if (isinstance(node, Elevator) and isinstance(nextNode, Elevator)):
             isFloorChange = True
 
-        # print(isFloorChange)
         segment = Segment(node.getCoords(), nextNode.getCoords(), i, False, isFloorChange)
         isFloorChange = False
 
@@ -136,15 +130,14 @@ def startupModeSelection(repeat=False):
 
     userInput = recognizeSpeech("mode")
 
-    print("userInput: ", userInput)
     if userInput == "help":
         play("voiceCommands/modeSelectionHelp.wav")
 
-        # userInput = recognizeSpeech("mode")
+        userInput = recognizeSpeech("mode")
 
     if userInput in ["nearestRestroom", "popularDestinations",
                      "savedDestinations", "nearestPrinter",
-                     "specificDestination", "findGod"]:
+                     "specificDestination", "findGod", "help"]:
         return userInput
 
     else:
@@ -160,23 +153,11 @@ def destinationInput(repeat=False):
 
     # User inputs destination
     destination = recognizeSpeech("location")
-    
+
     if isLegalNode(destination):
         return destination
     else:
         return destinationInput(True)
-
-    """
-    # Columbus repeats destination for confirmation.
-    speechText = "Is your destination %s?" % destination
-
-    # User confirms or corrects (if incorrect, repeat destination input).
-    confirmation = recognizeSpeech("filter") 
-    if confirmation == "yes":
-        return destination
-    else:
-        return destinationInput()
-    """
 
 
 def startLocationInput(repeat=False):
@@ -188,23 +169,11 @@ def startLocationInput(repeat=False):
 
     # User inputs start location.
     startLocation = recognizeSpeech("location")
-    
+
     if isLegalNode(startLocation):
         return startLocation
     else:
         return startLocationInput(True)
-    """
-    # Columbus repeats start location for confirmation.
-    speakText = "Is your current location Wean Hall %s?" % startLocation
-    speakColumbus(speakText)
-
-    # User confirms or corrects (if incorrect, repeat start location input).
-    confirmation = recognizeSpeech("filter") 
-    if confirmation == "yes":
-        return startLocation
-    else:
-        return startLocationInput()
-    """
 
 
 def popularLocationsInput(data, repeat=False):
@@ -218,8 +187,8 @@ def popularLocationsInput(data, repeat=False):
     userInput = recognizeSpeech("popularDest")
 
     if userInput == "help":
-        play("voiceCommands/modeSelectionHelp.wav")
-        # userInput = recognizeSpeech("popularDest")
+        play("voiceCommands/popularLocationSelectionHelp.wav")
+        userInput = recognizeSpeech("popularDest")
 
     if userInput in ["5Prima", "4Sorrells"]:
         return userInput
@@ -243,18 +212,13 @@ def savedLocationsInput(data, repeat=False):
 
         if userInput == "help":
             play("voiceCommands/modeSelectionHelp.wav")
-            # userInput = recognizeSpeech("savedDest")
+            userInput = recognizeSpeech("savedDest")
 
         if userInput in data.savedLocations:
             return userInput
 
         else:
             return savedLocationsInput(data, True)
-
-
-
-# def speakColumbus(speechText):
-#     print(speechText)
 
 
 def isLegalNode(string):
