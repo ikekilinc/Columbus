@@ -40,6 +40,9 @@ def recognizeSpeech(formatFilter=None): # recognize speech using CMU Sphinx
         elif formatFilter=="popularDest":
             output = filter(output)
             output = popularDestFilter(output)
+        elif formatFilter=="savedDest":
+            output = filter(output)
+            output = savedDestFilter(output)
         else:
             output = filter(output)
         return output
@@ -135,12 +138,26 @@ def modeFilter(text):
 def popularDestFilter(text):
     prima = set(["prima", "Prima", "coffee", "tea", "rhema", "primo"])
     sorrells = set(["sorrells", "sorel's", "shirelles", "cirella's", "library"])
+    helpOptions = set(["help", "options", "assistance", "mode", "modes"])
 
     for word in text.split():
         if word in prima:
             return "5Prima"
         elif word in sorrells:
             return "4Sorrells"
+        elif word in helpOptions:
+            return "help"
     return None
+
+def savedDestFilter(text):
+    helpOptions = set(["help", "options", "assistance", "mode", "modes"])
+
+    for word in text.split():
+        if word in helpOptions:
+            return "help"
+
+    return locationFilter(text)
+
+
 
 

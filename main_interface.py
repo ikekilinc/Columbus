@@ -45,6 +45,7 @@ def init(data):
     data.margin = data.width/16
     data.topMargin = data.height/3.5
     data.startClicks = 0
+    data.allNodesMap = mapAllNodes()
 
     data.backgroundImage = PhotoImage(file="brownPaperBackground.gif")
     data.modeSelection = False
@@ -52,8 +53,8 @@ def init(data):
     data.mode = None
     data.modeButtons = initButtons(data)
     data.popLocsButtons = initPopLocsButtons(data)
-    data.savedLocs = initSavedLocs(data)
-    data.savedLocsButtons = initSavedLocsButtons(data)
+    data.savedLocations = initSavedLocs(data)
+    data.savedLocationButtons = initSavedLocsButtons(data)
     data.selectPopLocsScreen = False
     data.selectSavedLocsScreen = False
     # data.prevModesList = []
@@ -108,65 +109,103 @@ def initPopLocsButtons(data):
 
 
 def initSavedLocs(data):
-    pass
+    savedLocations = []
+    currContents = readFile("savedLocations.txt")
+    print("currContents: ", currContents)
+    for location in currContents.splitlines():
+        locationFloor = "WH%s" % location[0]
+        locationNode = data.allNodesMap[locationFloor][location]
+        savedLocations.append(locationNode)
+    return savedLocations
+
+
+def saveLocation(data, newLocation):
+    finalStr = ""
+    for location in data.savedLocations:
+        # print(location)
+        # if str(location) not in finalStr:
+        finalStr = finalStr + str(location) + "\n"
+
+    print("finalStr1: ", finalStr)
+    if str(newLocation) not in finalStr:
+        finalStr = finalStr + newLocation
+        print("finalStr2: ", finalStr)
+    else:
+        finalStr = finalStr[:-1]
+        print("finalStr: ", finalStr)
+    print(finalStr)
+    writeFile("savedLocations.txt", finalStr)
 
 
 def initSavedLocsButtons(data):
-    pass
+    (w, h, m, tm) = (data.width, data.height, data.margin, data.topMargin)
+    (butW, butH, diff) = (w/4, h/6, 20)
+    allButtons = []
+
+    for i in range(len(data.savedLocations)):
+        location = data.savedLocations[i]
+        x0 = (i%3 + 1)*m + (i%3)*butW - diff
+        y0 = (tm*(4/3)) if (i//3 < 1) else (tm*(3/2) + butH)
+        x1 = (i%3 + 1)*m + (i%3 + 1)*butW - diff
+        y1 = (tm*(4/3)+butH) if (i//3 < 1) else (tm*(3/2)+2*butH)
+        button = Button(str(location), [x0, y0, x1, y1], str(location))
+        allButtons.append(button)
+
+    # buttonA = Button("5Prima", [m-diff, tm*(4/3), m+butW+diff, tm*(4/3)+butH], "Prima")
+    # buttonB = Button("4Sorrells", [2*m+butW-diff, tm*(4/3), 2*m+2*butW+diff, tm*(4/3)+butH], "Sorrells")
+    # buttonC = Button("savedDestinations", [3*m+2*butW-diff, tm*(4/3), 3*m+3*butW+diff, tm*(4/3)+butH], "Saved Destinations")
+    # buttonD = Button("nearestRestroom", [m-diff, tm*(3/2)+butH, m+butW+diff, tm*(3/2)+2*butH], "Nearest Restroom")
+    # buttonE = Button("nearestPrinter", [2*m+butW-diff, tm*(3/2)+butH, 2*m+2*butW+diff, tm*(3/2)+2*butH], "Nearest Printer")
+    # buttonF = Button("findGod", [3*m+2*butW-diff, tm*(3/2)+butH, 3*m+3*butW+diff, tm*(3/2)+2*butH], "Find God")
+    # buttonZ = Button("audioControl", [w/2-w/6-diff, h-tm/2-10, w/2+w/6+diff, h-10], "Enable Audio Control")
+
+    buttonZ = Button("audioControl", [w/2-w/6-diff, h-tm/2-10, w/2+w/6+diff, h-10], "Enable Audio Control")
+    allButtons.append(buttonZ)
+
+    return allButtons
 
 
+
+def readFile(path): # From 15-112 "Strings" notes
+    with open(path, "rt") as f:
+        return f.read()
+
+def writeFile(path, contents): # From 15-112 "Strings" notes
+    with open(path, "wt") as f:
+        f.write(contents)
 
 def runStartupSequence(data):
     if data.mode == "specificDestination":
         data.destination = destinationInput()
-        # PLAY CONFIRMATION BEEP
-        data.startLocation = startLocationInput()
-        # data.startLocation = input()
+        # data.startLocation = startLocationInput()
+        data.startLocation = input()
     elif data.mode == "nearestRestroom":
-        data.startLocation = startLocationInput()
-        # data.startLocation = input()
+        # data.startLocation = startLocationInput()
+        data.startLocation = input()
         # PLAY CONFIRMATION BEEP
         data.destination = None
     elif data.mode == "nearestPrinter":
-        data.startLocation = startLocationInput()
-        # data.startLocation = input()
+        # data.startLocation = startLocationInput()
+        data.startLocation = input()
         # PLAY CONFIRMATION BEEP
         data.destination = None
     elif data.mode == "popularDestinations" and data.startLocation == None:
-        print("Got to popDests in runStartup")
+        # Columbus gives user choice of popular destinations.
         data.selectPopLocsScreen = not data.selectPopLocsScreen
-    elif data.mode == "savedDestinations":
-        # # Columbus gives user choice of previously saved destinations.
-        # data.destination = savedLocationsInput()
-        # # PLAY CONFIRMATION BEEP
-        # # data.startLocation = startLocationInput()
-        # data.startLocation = input()
-
-        # if data.selectSavedLocsScreen:
-        #     (x, y) = (event.x, event.y)
-        #     for button in data.savedLocsButtons:
-        #         if button.pointInButton(x, y):
-        #             if button.purpose == "audioControl":
-        #                 # PLAY LISTENING NOW BEEP
-        #                 data.audioControl = not data.audioControl
-        #                 data.destination = savedLocationsInput()
-        #                 # PLAY CONFIRMATION BEEP
-        #                 data.startLocation = startLocationInput()
-        #             else:
-        #                 data.destination = button.getPurpose()
-        #                 data.startLocation = input()
-        pass
-        # data.selectSavedLocsScreen = not data.selectSavedLocsScreen
+    elif data.mode == "savedDestinations" and data.startLocation == None:
+        # Columbus gives user choice of previously saved destinations.
+        data.selectSavedLocsScreen = not data.selectSavedLocsScreen
     elif data.mode == "findGod":
+        # Columbus finds God.
         pass
 
     # data.startLocation = input()
     # data.destination = input()
-    print("Got here too!")
-    print("startLocation: ", data.startLocation)
+    # print("Got here too!")
+    # print("startLocation: ", data.startLocation)
 
     if data.startLocation != None:
-        print("Got to map maker area")
+        # print("Got to map maker area")
         data.modeSelection = False
         data.mapView = True
         data.startRoute = True
@@ -197,26 +236,28 @@ def mousePressed(event, data):
         for button in data.popLocsButtons:
             if button.pointInButton(x, y):
                 if button.purpose == "audioControl":
-                    data.destination = popularLocationsInput()
+                    data.destination = popularLocationsInput(data)
                     # play("voiceCommands/confirmationBeep.wav")
                     data.startLocation = startLocationInput()
                 else:
                     data.destination = button.getPurpose()
                     data.startLocation = input()
-                print(data.startLocation, data.destination)
+                # print(data.startLocation, data.destination)
                 data.selectPopLocsScreen = False
                 runStartupSequence(data)
 
     elif data.selectSavedLocsScreen:
         (x, y) = (event.x, event.y)
-        for button in data.savedLocsButtons:
+        for button in data.savedLocationButtons:
             if button.pointInButton(x, y):
+                print("buttonPurpose: ", button.purpose)
                 if button.purpose == "audioControl":
-                    data.destination = savedLocationsInput()
+                    data.destination = savedLocationsInput(data)
                     # play("voiceCommands/confirmationBeep.wav")
                     data.startLocation = startLocationInput()
                 else:
                     data.destination = button.getPurpose()
+                    print("Input start location:")
                     data.startLocation = input()
                 data.selectSavedLocsScreen = False
                 runStartupSequence(data)
@@ -227,6 +268,8 @@ def mousePressed(event, data):
         for button in data.modeButtons:
             if button.pointInButton(x, y):
                 # print(data.mode)
+                if button.purpose == "savedDestinations":
+                    print(data.savedLocations)
                 if button.purpose == "audioControl":
                     data.audioControl = not data.audioControl
                     data.mode = startupModeSelection()
@@ -251,10 +294,8 @@ def keyPressed(event, data):
 
     elif data.selectPopLocsScreen:
         if (event.keysym == "space"):
-            # PLAY LISTENING NOW BEEP
             # data.audioControl = not data.audioControl
-            data.destination = popularLocationsInput()
-            # PLAY CONFIRMATION BEEP
+            data.destination = popularLocationsInput(data)
             data.startLocation = startLocationInput()
             data.selectPopLocsScreen = False
             runStartupSequence(data)
@@ -267,10 +308,8 @@ def keyPressed(event, data):
 
     elif data.selectSavedLocsScreen:
         if (event.keysym == "space"):
-            # PLAY LISTENING NOW BEEP
             # data.audioControl = not data.audioControl
-            data.destination = savedLocationsInput()
-            # PLAY CONFIRMATION BEEP
+            data.destination = savedLocationsInput(data)
             data.startLocation = startLocationInput()
 
         elif (event.keysym == "BackSpace"):
@@ -293,35 +332,39 @@ def keyPressed(event, data):
     
 
     elif data.mapView:
+        if data.atDestination == True:
+            # play("voiceCommands/arrivedAtDestination.wav")
+            # play("voiceCommands/destinationSavePrompt.wav")
+            if (event.keysym == "space"):
+                data.startScreen = True
+                data.mapView = False
+                data.startRoute = False
+                data.startLocation = None
+                data.destination = None
+            elif (event.keysym == "Return"):
+                print(data.destination)
+                saveLocation(data, data.destination)
+                data.startScreen = True
+                data.mapView = False
+                data.startRoute = False
+                data.startLocation = None
+                data.destination = None
+            data.savedLocations = initSavedLocs(data)
+            data.savedLocationButtons = initSavedLocsButtons(data)
+
         if data.atDestination == False:
             # if data.currSegmentNum == 0:
             #     play("voiceCommands/startRoutePrompt.wav")
-            if data.currSegmentNum == len(data.allSegments)-1:
-                data.atDestination = True
-                play("voiceCommands/arrivedAtDestination.wav")
-                play("voiceCommands/destinationSavePrompt.wav")
-            if data.atDestination == True:
-                if (event.keysym == "space"):
-                    data.startScreen = True
-                    data.mapView = False
-                    data.mapView = False
-                    data.startRoute = False
-                    data.startLocation = None
-                    data.destination = None
-                elif (event.keysym == "Return"):
-                    print(data.destination)
-                    data.startScreen = True
-                    data.mapView = False
-                    data.mapView = False
-                    data.startRoute = False
-                    data.startLocation = None
-                    data.destination = None
-
             if (event.keysym == "space"):
-                data.currSegmentNum += 1
-                data.currFloor = data.allSegments[data.currSegmentNum].getSegFloor()
-                (data.offsetX, data.offsetY) = (0, 0)
-                print(data.currSegmentNum)
+                if data.currSegmentNum < len(data.allSegments)-1:
+                    data.currSegmentNum += 1
+                    data.currFloor = data.allSegments[data.currSegmentNum].getSegFloor()
+                    (data.offsetX, data.offsetY) = (0, 0)
+                    print(data.currSegmentNum)
+                else:
+                    # play("voiceCommands/arrivedAtDestination.wav")
+                    # play("voiceCommands/destinationSavePrompt.wav")
+                    data.atDestination = True
             elif (event.keysym == "BackSpace"):
                 if data.currSegmentNum == 0:
                     data.mapView = False
@@ -342,6 +385,10 @@ def keyPressed(event, data):
                 data.offsetY += 40
             elif (event.keysym == "Down"):
                 data.offsetY -= 40
+        
+            # if data.currSegmentNum == len(data.allSegments)-1:
+            #     data.atDestination = True
+
         """
         else:
             if (event.keysym == )
@@ -373,6 +420,21 @@ def redrawAll(canvas, data):
         canvas.create_image(data.width/2, data.height/2, image=data.backgroundImage)
         canvas.create_text(data.width/2, 10, text="Columbus", anchor=N, font="Avenir 185 bold")
         for button in data.popLocsButtons:
+            coords = button.getCoords()
+            (x0, y0, x1, y1) = (coords[0], coords[1], coords[2], coords[3])
+            (cx, cy) = ((x1+x0)/2, (y1+y0)/2)
+            # if (button.getPurpose() == "audioControl") and (data.audioControl):
+            #     buttonColor = "red"
+            # else:
+            buttonColor = "black"
+            canvas.create_rectangle(x0,y0,x1,y1, width=5, outline=buttonColor)
+            canvas.create_text(cx, cy, text=button.getText(),
+                               fill=buttonColor, font="Avenir 30")
+
+    elif data.selectSavedLocsScreen:
+        canvas.create_image(data.width/2, data.height/2, image=data.backgroundImage)
+        canvas.create_text(data.width/2, 10, text="Columbus", anchor=N, font="Avenir 185 bold")
+        for button in data.savedLocationButtons:
             coords = button.getCoords()
             (x0, y0, x1, y1) = (coords[0], coords[1], coords[2], coords[3])
             (cx, cy) = ((x1+x0)/2, (y1+y0)/2)

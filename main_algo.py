@@ -8,6 +8,7 @@
 from speech_to_text import *
 from node_mapper import *
 from path_finder import *
+# from main_interface import *
 
 # INTEGRATE A "REMEMBER DESTINATION" FUNCTIONALITY
 
@@ -37,14 +38,14 @@ def run():
     elif pathMode == "popularDestinations":
         # Columbus gives user choice options of popular destinations.
         # Sets user input as the destination.
-        destination = popularLocationsInput()
+        destination = popularLocationsInput(data)
         # Columbus asks where user is (TEMP).
         startLocation = startLocationInput()
 
     elif pathMode == "savedDestinations":
         # Columbus gives user choice of previously saved destinations and sets
         # user input as the destination.
-        destination = savedLocationsInput()
+        destination = savedLocationsInput(data)
         # Columbus asks where user is (TEMP).
         startLocation = startLocationInput()
 
@@ -139,7 +140,7 @@ def startupModeSelection(repeat=False):
     if userInput == "help":
         play("voiceCommands/modeSelectionHelp.wav")
 
-        userInput = recognizeSpeech("mode")
+        # userInput = recognizeSpeech("mode")
 
     if userInput in ["nearestRestroom", "popularDestinations",
                      "savedDestinations", "nearestPrinter",
@@ -206,7 +207,7 @@ def startLocationInput(repeat=False):
     """
 
 
-def popularLocationsInput(repeat=False):
+def popularLocationsInput(data, repeat=False):
     print("popLocsInput")
     if repeat==True:
         play("voiceCommands/sorryPleaseRepeat.wav")
@@ -218,19 +219,38 @@ def popularLocationsInput(repeat=False):
 
     if userInput == "help":
         play("voiceCommands/modeSelectionHelp.wav")
-        userInput = recognizeSpeech("popularDest")
+        # userInput = recognizeSpeech("popularDest")
 
     if userInput in ["5Prima", "4Sorrells"]:
         return userInput
 
     else:
-        return popularLocationsInput(True)
+        return popularLocationsInput(data, True)
 
 
-def savedLocationsInput():
-    # (say "No destinations saved" if none saved), 
-    print("savedLocsInput")
-    pass
+def savedLocationsInput(data, repeat=False):
+    if len(data.savedLocations) == 0:
+        play("voiceCommands/noSavedDestinations.wav")
+
+    else:
+        if repeat==True:
+            play("voiceCommands/sorryPleaseRepeat.wav")
+        else:
+            # Columbus asks where user would like to go.
+            play("voiceCommands/destinationInputPromptWithHelp.wav")
+
+        userInput = recognizeSpeech("savedDest")
+
+        if userInput == "help":
+            play("voiceCommands/modeSelectionHelp.wav")
+            # userInput = recognizeSpeech("savedDest")
+
+        if userInput in data.savedLocations:
+            return userInput
+
+        else:
+            return savedLocationsInput(data, True)
+
 
 
 # def speakColumbus(speechText):
